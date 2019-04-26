@@ -24,7 +24,7 @@ import org.apache.tools.ant.taskdefs.Mkdir;
 import org.apache.tools.ant.taskdefs.Property;
 import org.apache.tools.ant.types.Path;
 
-import java.io.File;
+import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -43,7 +43,15 @@ public class AntHelper
 
   private final Project ant;
 
-  public AntHelper(final Mojo owner, final MavenProject project) {
+  private final File tempFile;
+
+  public File getTempFile() {
+    return tempFile;
+  }
+
+  public AntHelper(final Mojo owner, final MavenProject project) throws IOException {
+    tempFile = File.createTempFile("outputfile-", ".txt");
+    tempFile.deleteOnExit();
     assert owner != null;
     assert project != null;
 
@@ -60,10 +68,10 @@ public class AntHelper
     inheritProperties();
   }
 
-  private void initAntLogger(final Project ant) {
+  private void initAntLogger(final Project ant) throws IOException {
     MavenAntLoggerAdapter antLogger = new MavenAntLoggerAdapter(log);
     antLogger.setEmacsMode(true);
-    antLogger.setOutputPrintStream(System.out);
+    antLogger.setOutputPrintStream(new PrintStream(tempFile));
     antLogger.setErrorPrintStream(System.err);
 
     if (log.isDebugEnabled()) {

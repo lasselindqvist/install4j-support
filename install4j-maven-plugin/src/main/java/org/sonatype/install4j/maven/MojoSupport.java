@@ -27,7 +27,7 @@ public abstract class MojoSupport
 {
   protected Log log;
 
-  @Override
+
   public void execute() throws MojoExecutionException, MojoFailureException {
     this.log = getLog();
 

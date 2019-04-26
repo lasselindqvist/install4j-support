@@ -21,6 +21,8 @@ import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionScheme;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 /**
  * Helper to get version information from install4j.
@@ -46,16 +48,22 @@ public class VersionHelper
    * @param ant        Ant task helper
    * @param install4jc File pointing at the {@code install4jc} executable binary.
    */
-  public String fetchVersion(final AntHelper ant, final File install4jc) {
+  public String fetchVersion(final AntHelper ant, final File install4jc) throws FileNotFoundException {
     // Sanity check, ask install4jc for its version
     ExecTask task = ant.createTask(ExecTask.class);
     task.setExecutable(install4jc.getAbsolutePath());
     task.createArg().setValue("--version");
     // ensure we have a fresh property to return the version details in
-    String versionProperty = "install4j.version-" + System.currentTimeMillis();
-    task.setOutputproperty(versionProperty);
+    String errorProperty = "error-" + System.currentTimeMillis();
+    task.setErrorProperty(errorProperty);
     task.execute();
-    return versionProperty;
+    if (errorProperty != null && !errorProperty.isEmpty()) {
+      log.warn("Trying to read the version of install4c returned error output: " + errorProperty);
+    }
+    try (Scanner s = new Scanner(ant.getTempFile()).useDelimiter("\\Z")) {
+      String contents = s.next();
+      return contents;
+    }
   }
 
   /**
